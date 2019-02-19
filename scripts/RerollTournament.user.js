@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         RerollTournament
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/gfrancini/HotG/scripts
 // @version      0.1
 // @description  Reroll button for tournament in HoTg
 // @author       stronzio
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
+// @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/RerollTournament.user.js
+// @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/RerollTournament.user.js
 // @grant        none
 // ==/UserScript==
 

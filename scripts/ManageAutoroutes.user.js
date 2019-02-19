@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         ManageAutoroutes
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/gfrancini/HotG
 // @version      0.5d
 // @description  Assists with creating/increasing autoroutes in HoTG with a single click.
 // @author       stronzio, betatesting/ideas by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
+// @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/ManageAutoroutes.user.js
+// @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/ManageAutoroutes.user.js
 // @grant        none
 // ==/UserScript==
 

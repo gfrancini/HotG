@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         MasterImport
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/gfrancini/HotG
 // @version      0.1
 // @description  Adds a button to import blueprint everywhere in HotG
 // @author       stronzio, betatesting by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
+// @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/MasterImport.user.js
+// @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/MasterImport.user.js
 // @grant        none
 // ==/UserScript==
 

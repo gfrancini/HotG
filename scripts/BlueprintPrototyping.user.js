@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         BlueprintPrototyping
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/gfrancini/HotG
 // @version      0.5
 // @description  Assist with blueprinting in HoTG.
 // @author       stronzio, betatesting/suggestions by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
+// @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/BlueprintPrototyping.user.js
+// @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/BlueprintPrototyping.user.js
 // @grant        none
 // ==/UserScript==
 
@@ -41,7 +43,7 @@
     var protoset = true; //true => enable *set as prototype* mode
     var protoimport = true; //true => enable *import from prototype* mode
     var protoempire = true; //true => enable *export to empire* mode
-    var protogalaxy = true; //true => enable *export to galaxy* mode
+    var protogalaxy = false; //true => enable *export to galaxy* mode
 
 //////////
 

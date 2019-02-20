@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RerollTournament
 // @namespace    https://github.com/gfrancini/HotG/scripts
-// @version      0.1
+// @version      0.2
 // @description  Reroll button for tournament in HoTg
 // @author       stronzio
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*

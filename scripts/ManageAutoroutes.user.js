@@ -13,7 +13,7 @@
 
 
 
-(async function() {
+(async function () {
     'use strict';
 
     // what does this script do?
@@ -30,12 +30,12 @@
     // BEWARE: it is not 100% gamelike.
     // Unlike the autoroutes you create ingame, here you will set transfer also for (yet) undiscovered resources, as should happen with the "extend to new resources" option enabled ingame.
 
-//////////
+    //////////
 
     var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
 
 
-    //if you dont own one of the hubs, the button will be disabled (in that galaxy), but will become active again after you conquer that hub.
+    //if you dont own one of the hubs, the button will be disabled in that galaxy, but will become active again after you conquer that hub.
     var hubGalaxy1 = "ishtar gate";
     var hubGalaxy2 = "solidad";
     var hubGalaxy3 = "xirandrus";
@@ -48,7 +48,7 @@
     var redundancy = 10; //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
     var cancelOldroutes = true; //true => if using andromeda and the current route contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
 
-//////////
+    //////////
 
 
     if (ignoreStoredValues)
@@ -64,14 +64,14 @@
     var hubs = [hubG1, hubG2, hubG3];
     var orion = { id: 70, slvl: 14 };
     var andromeda = { id: 102, slvl: 17 };
-    if (shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy <= 0) {
+    if (shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy < 0) {
         console.log("ManageAutoroutes: invalid parameters");
         return false;
     }
     var config = { subtree: true, childList: true };
     var ele = document.getElementById("planet_interface");
     var cname = "action_auto404";
-    var obs = new MutationObserver(function (mutation) {
+    var obs = new MutationObserver(function (_mutation) {
         if (document.getElementById(cname)) return;
         if (!document.getElementById("action_auto")) return;
         var galaxy = game.planets.filter((item) => planets[item].map == currentPlanet.map);
@@ -127,25 +127,25 @@
 
                 if (cancelOldroutes && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
-                    let sourcePlanet, orionFleet;
                     if (currentRoute.ships[orion.id] > 0) {
+                        let sourcePlanet, orionFleet;
                         sourcePlanet = planets[currentRoute.source];
                         if (currentRoute.shipNum() > currentRoute.ships[orion.id]) { //split out orions and let route go on
                             orionFleet = new Fleet(game.id, "Orions split from " + planets[dest].name);
                             orionFleet.ships[orion.id] += currentRoute.ships[orion.id];
                             let loadFactor = orionFleet.maxStorage() / currentRoute.maxStorage();
                             currentRoute.ships[orion.id] = 0;
-                            currentRoute.storage.forEach((item, index) => { //distribute resources loaded like ingame
+                            currentRoute.storage.forEach((item, index) => { //distribute present cargo like ingame functions
                                 if (index >= 0 && item > 0) {
                                     orionFleet.storage[index] = item * loadFactor;
-                                    currentRoute.storage[index] = item * (1 - loadFactor);
+                                    item *= (1 - loadFactor);
                                 }
                             });
                             for (pos = 1; sourcePlanet.fleets[pos];) pos++; //find the correct orbit slot to place the new fleet
                             sourcePlanet.fleets[pos] = orionFleet;
                             orionFleet.pushed = true;
                         }
-                        else { // fleet has only orions -> cancel autoroute and update ff (leave fleet in travel for manual delivery)
+                        else { // fleet has only orions -> cancel autoroute and update ff (leave fleet in travel to ease manual delivery)
                             currentRoute.type = "normal";
                             currentRoute.name = "Orions canceled from " + planets[dest].name;
                             ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.civis == game.id && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
@@ -175,15 +175,14 @@
                             neededCargoIn -= excludedIn;
                             neededCargoOut -= excludedOut;
                         }
-                        let currentSpeed = currentRoute.travelSpeed() * idleBon; //idlebon here to get a useful console output
-                        //console.log("cargo space needed: "+planets[dest].name+" --> "+neededCargoOut*(transferPercent/100)*2*distance/currentSpeed+" , "+planets[hub].name+" --> " +neededCargoIn*(transferPercent/100)*2*distance/currentSpeed); //seems always a bit higher than ingame during idle time (??)
+                        let currentSpeed = currentRoute.travelSpeed() * idleBon;
                         neededShips = Math.max(Math.ceil(Math.max(neededCargoIn, neededCargoOut) * (transferPercent / 100) * 2 * distance / currentSpeed / ships[cargo.id].maxStorage * (1 + redundancy / 100)), currentRoute.ships[cargo.id]) - currentRoute.ships[cargo.id];
                     }
                 }
                 let enoughHubfleet = takeFromHubfleet && planets[hub].fleets.hub.ships[cargo.id] > neededShips;
                 let enoughResources = enoughHubfleet || !needed.some((item, index) => planets[hub].resources[index] < item * neededShips);
                 if (!enoughResources) {
-                    if (!routePresent) { //we cannot leave the planet without autoroute, so recover the orions
+                    if (!routePresent) { // planet without autoroute, better recover the orions
                         let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.civis == game.id &&
                             (dest == item.origin || dest == item.destination));
                         if (fn.length > 0) {
@@ -226,7 +225,7 @@
                     for (let i = 0; i < currentRoute.autoPct.length; i++) {
                         currentRoute.autoPct[i] = true;
                         currentRoute.autoRes[hubpos][i] = 0;
-                        currentRoute.autoRes[destpos][i] = transferPercent * 100; //could set undiscovered resources to 0 to be really legit
+                        currentRoute.autoRes[destpos][i] = transferPercent * 100;
                         if (useLategameExclusions && exclusions.includes(i)) currentRoute.autoRes[destpos][i] = 0;
                     }
                     currentRoute.fusion(f);
@@ -237,7 +236,7 @@
                     currentRoute.autoMap[dest] = 1;
                     for (let i = 0; i < currentRoute.autoPct.length; i++) {
                         currentRoute.autoPct[i] = true;
-                        currentRoute.autoRes[1][i] = transferPercent * 100; //could set undiscovered resources to 0 to be really legit
+                        currentRoute.autoRes[1][i] = transferPercent * 100;
                         if (useLategameExclusions && exclusions.includes(i)) currentRoute.autoRes[1][i] = 0;
                     }
                     fleetSchedule.push(currentRoute, hub, hub, dest, "auto");

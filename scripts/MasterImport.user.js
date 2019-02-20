@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MasterImport
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.1
+// @version      0.2
 // @description  Adds a button to import blueprint everywhere in HotG
 // @author       stronzio, betatesting by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
@@ -10,9 +10,11 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(async function() {
     'use strict';
 //////////
+
+    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
 
     var excludedTypes = ["carbon","ammonia"]; //planet types excluded from the master import (blueprint wont be applied to them) => to turn it off simply comment out this row (write // before var)
 
@@ -56,4 +58,18 @@
         }
     }
     obs_m.observe(ele,config);
+
+    function saveParam(){
+        let savestring = {
+            excludedTypes: excludedTypes
+        };
+        GM.setValue("s404",JSON.stringify(savestring));
+    }
+
+    async function loadParam(){
+        let loadstring = JSON.parse(await GM.getValue("s404"));
+        try {
+            excludedTypes = loadstring["excludedTypes"];
+        } catch(e){return;} //revert to given params if errors
+    }
 })();

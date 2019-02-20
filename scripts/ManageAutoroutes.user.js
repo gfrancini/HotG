@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ManageAutoroutes
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.5d
+// @version      0.6
 // @description  Assists with creating/increasing autoroutes in HoTG with a single click.
 // @author       stronzio, betatesting/ideas by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
@@ -12,7 +12,7 @@
 
 
 
-(function() {
+(async function() {
     'use strict';
 
     // what does this script do?
@@ -30,6 +30,9 @@
     // Unlike the autoroutes you create ingame, here you will set transfer also for (yet) undiscovered resources, as should happen with the "extend to new resources" option enabled ingame.
 
 //////////
+
+    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
+
 
     //if you dont own one of the hubs, the button will be disabled (in that galaxy), but will become active again after you conquer that hub.
     var hubGalaxy1 = "ishtar gate";
@@ -195,4 +198,36 @@
         }
     });
     obs.observe(ele,config);
+
+    function saveParam(){
+        let savestring = {
+            hubGalaxy1: hubGalaxy1,
+            hubGalaxy2: hubGalaxy2,
+            hubGalaxy3: hubGalaxy3,
+            shipsPerAutoroute: shipsPerAutoroute,
+            transferPercent: transferPercent,
+            useLategameExclusions: useLategameExclusions,
+            noDuplicates: noDuplicates,
+            takeFromHubfleet: takeFromHubfleet,
+            topUp: topUp,
+            redundancy: redundancy 
+        };
+        GM.setValue("s404",JSON.stringify(savestring));
+    }
+
+    async function loadParam(){
+        let loadstring = JSON.parse(await GM.getValue("s404"));
+        try {
+            hubGalaxy1 = loadstring["hubGalaxy1"];
+            hubGalaxy2 = loadstring["hubGalaxy2"];
+            hubGalaxy3 = loadstring["hubGalaxy3"];
+            shipsPerAutoroute = loadstring["shipsPerAutoroute"];
+            transferPercent = loadstring["transferPercent"];
+            useLategameExclusions = loadstring["useLategameExclusions"];
+            noDuplicates = loadstring["noDuplicates"];
+            takeFromHubfleet = loadstring["takeFromHubfleet"];
+            topUp = loadstring["topUp"];
+            redundancy = loadstring["redundancy"];
+        } catch(e){return;} //revert to given params if errors
+    }
 })();

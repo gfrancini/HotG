@@ -1,16 +1,17 @@
 // ==UserScript==
 // @name         BlueprintPrototyping
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.5
+// @version      0.7
 // @description  Assist with blueprinting in HoTG.
 // @author       stronzio, betatesting/suggestions by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
 // @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/BlueprintPrototyping.user.js
 // @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/BlueprintPrototyping.user.js
-// @grant        none
+// @grant        GM.setValue
+// @grant        GM.getValue
 // ==/UserScript==
 
-(function() {
+(async function() {
     'use strict';
 
     // what does this script do?
@@ -18,7 +19,7 @@
     // it adds two buttons on the planet interface (also called planet overview).
     // the top one toggles between different modes. the bottom one executes the command selected.
     // prototypes are the first planet of each type (lava, terrestrial, ocean and so on) you would encounter in ascending influence order. You may set a different list below (and should, if you make promision hub!).
-    // As a precaution, it is disabled for hub planets (only import from prototype is active) <- usually hubs have many one-time buildings which you really dont want to clone everywhere.
+    // As a precaution, it is disabled for hub planets (only import from prototype is active).
     // hub planets are detected via the autoroutes' script. if you dont have it, then this protection wont work.
 
     // BEWARE: it is not 100% gamelike.
@@ -37,6 +38,8 @@
 
 //////////
 
+    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
+
     var copyUIsetting = true; //true => whenever you use the prototype blueprint it will also import the hide/show setting of building's UI
     var sortPlanets = false; //true => puts prototype planets at the start of planets' list, other planets are grouped by galaxy and ordered by influence (ties resolved by planet id).
     var protonames = ["promision", "vasilis", "aequoreas", "orpheus", "antirion", "lone nassaus", "epsilon rutheni", "xenovirgo", "magellan", "auriga", "forax"]; //order doesnt really matter, these will be your "default" prototypes.
@@ -52,6 +55,10 @@
     var cname = "action_proto404";
     var cname2 = "mode_proto404";
     var modes = {};
+    if(ignoreStoredValues)
+        saveParam();
+    else
+        await loadParam();
     modes.set = protoset;
     modes.import = protoimport;
     modes.empire = protoempire;
@@ -199,5 +206,31 @@
 
     });
     obs.observe(ele,config);
+
+    function saveParam(){
+        let savestring = {
+            copyUIsetting: copyUIsetting,
+            sortPlanets: sortPlanets,
+            protonames: protonames,
+            protoset: protoset,
+            protoimport: protoimport,
+            protoempire: protoempire,
+            protogalaxy: protogalaxy
+        };
+        GM.setValue("s404",JSON.stringify(savestring));
+    }
+
+    async function loadParam(){
+        let loadstring = JSON.parse(await GM.getValue("s404"));
+        try {
+            copyUIsetting = loadstring["copyUIsetting"];
+            sortPlanets = loadstring["sortPlanets"];
+            protonames = loadstring["protonames"];
+            protoset = loadstring["protoset"];
+            protoimport = loadstring["protoimport"];
+            protoempire = loadstring["protoempire"];
+            protogalaxy = loadstring["protogalaxy"];
+        } catch(e){return;} //revert to given params if errors
+    }
 
 })();

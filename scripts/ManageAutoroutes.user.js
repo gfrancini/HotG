@@ -25,14 +25,15 @@
     // parameters need to be set correctly before using the script.
     // works only with orion and andromeda cargo. (if you are using any earlier cargo, you probably have few planets and little resources)
 
-    // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause any catastrophe, better safe than sorry.
+    // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause a catastrophe, better safe than sorry.
 
     // BEWARE: it is not 100% gamelike.
-    // Unlike the autoroutes you create ingame, here you will set transfer also for (yet) undiscovered resources, as should happen with the "extend to new resources" option enabled ingame.
+    // Unlike the autoroutes you create ingame, here you will pre-set transfer rates for (yet) undiscovered resources,
+	// the "extend to new resources" option enabled ingame does not actually do this correctly
 
 //////////
 
-    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
+    var ignoreStoredValues = false; //true => save current parameters and load them.   when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
 
 
     //if you dont own one of the hubs, the button will be disabled (in that galaxy), but will become active again after you conquer that hub.
@@ -41,10 +42,10 @@
     var hubGalaxy3 = "xirandrus";
     var shipsPerAutoroute = 1;
     var transferPercent = 101;
-    var useLategameExclusions = false; //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
-    var noDuplicates = true; // true => do not create autoroute if target planet already has one
-    var takeFromHubfleet = true; //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
-    var topUp = true; // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
+    var useLategameExclusions = false; //false => transfer all resources, true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** 
+    var noDuplicates = true; // true => do not create autoroute if target planet already has one, false => create a new autoroute every time button is pressed NOT RECOMMENDED
+    var takeFromHubfleet = true; //true => try to split ships from hubfleet (buy ships only if there aren't enough), false => always buy ships
+    var topUp = true; // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true), false => script only creates autroutes and does not interact with already created ones.
     var redundancy = 10; //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
 
 //////////

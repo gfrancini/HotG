@@ -7,7 +7,8 @@
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
 // @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/ManageAutoroutes.user.js
 // @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/ManageAutoroutes.user.js
-// @grant        none
+// @grant        GM.setValue
+// @grant        GM.getValue
 // ==/UserScript==
 
 
@@ -48,7 +49,10 @@
 
 //////////
 
-
+    if(ignoreStoredValues)
+        saveParam();
+    else
+        await loadParam();
     var hubG1 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy1.toLowerCase() && item.map == 0);
     hubG1 = hubG1.length > 0 ? hubG1[0].id : -1; //needed to avoid duplicate names
     var hubG2 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy2.toLowerCase() && item.map == 1);

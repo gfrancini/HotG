@@ -7,7 +7,8 @@
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
 // @downloadURL  https://github.com/gfrancini/HotG/raw/master/scripts/MasterImport.user.js
 // @updateURL    https://github.com/gfrancini/HotG/raw/master/scripts/MasterImport.user.js
-// @grant        none
+// @grant        GM.setValue
+// @grant        GM.getValue
 // ==/UserScript==
 
 (async function() {
@@ -20,7 +21,10 @@
 
 //////////
 
-
+    if(ignoreStoredValues)
+        saveParam();
+    else
+        await loadParam();
     var config = { subtree: true, childList: true};
     var ele = document.getElementById("planet_interface");
     var cname_m = "action_master404";

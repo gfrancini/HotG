@@ -62,7 +62,7 @@
     var hubs =[hubG1,hubG2,hubG3];
     var orion = {id:70, slvl:14};
     var andromeda = {id:102, slvl:17};
-    if(shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy <= 0) {
+    if(shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy < 0) {
         console.log("ManageAutoroutes: invalid parameters");
         return false;
     }
@@ -220,8 +220,8 @@
     }
 
     async function loadParam(){
-        let loadstring = JSON.parse(await GM.getValue("s404"));
         try {
+            let loadstring = JSON.parse(await GM.getValue("s404"));
             hubGalaxy1 = loadstring["hubGalaxy1"];
             hubGalaxy2 = loadstring["hubGalaxy2"];
             hubGalaxy3 = loadstring["hubGalaxy3"];

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ManageAutoroutes
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.7
+// @version      11
 // @description  Assists with creating/increasing autoroutes in HoTG with a single click.
 // @author       stronzio, betatesting/ideas by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
@@ -23,7 +23,9 @@
     // if the planet is the hub, it creates an autoroute to every player-owned planet in that galaxy.
     // if you change parameters you need to save and reload the game page for the changes to take effect.
     // parameters need to be set correctly before using the script.
-    // works only with orion and andromeda cargo. (if you are using any earlier cargo, you probably have few planets and little resources)
+    // works only with orion and andromeda cargo. (if you are using any earlier cargo, you probably have few planets/resources and need to micromanage)
+    // NAMING: the script will manage only autoroutes with a script-generated name. You can set the prefix in the parameters.
+    // If an autoroute's name includes "noscript" the script will be disabled for that planet, so any autoroute will stay the way it is. (useful for particular situations)
 
     // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause any catastrophe, better safe than sorry.
 
@@ -32,45 +34,49 @@
 
     //////////
 
-    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
+    var ignoreStoredValues = false; //true => use current parameters and save them *** false => ignore current parameters and load them from memory. (if errors use current ones)
+                        //when the script updates this will be set to false (to avoid messing with your game): you should then restore correct parameters and set this to true.
 
 
     //if you dont own one of the hubs, the button will be disabled in that galaxy, but will become active again after you conquer that hub.
-    var hubGalaxy1 = "ishtar gate";
-    var hubGalaxy2 = "solidad";
-    var hubGalaxy3 = "xirandrus";
-    var shipsPerAutoroute = 1;
-    var transferPercent = 101;
-    var useLategameExclusions = false; //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
-    var noDuplicates = true; // true => do not create autoroute if target planet already has one
-    var takeFromHubfleet = true; //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
-    var topUp = true; // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
-    var redundancy = 10; //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
-    var cancelOldroutes = true; //true => if using andromeda and the current route contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+    var hubGalaxy1 = "promision"
+    var hubGalaxy2 = "persephone"
+    var hubGalaxy3 = "xirandrus"
+    var prefix = "Auto_" //script-generated fleet will be named "prefix + destination-planet-name". cannot be left empty ("") and must always be surrounded by "".
+    var shipsPerAutoroute = 1
+    var transferPercent = 101
+    var useLategameExclusions = true //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
+    var noDuplicates = true // true => do not create autoroute if target planet already has one
+    var takeFromHubfleet = true //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
+    var topUp = true // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
+    var redundancy = 10 //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
+    var cancelOldRoutes = true //true => if switching to andromeda and the script-routes contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+    var onlyScriptRoutes = true //true => eventually cancel all autoroutes not managed by the script (except when their name includes "noscript")
 
     //////////
 
 
     if (ignoreStoredValues)
-        saveParam();
+        saveParam()
     else
-        await loadParam();
-    var hubG1 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy1.toLowerCase() && item.map == 0);
+        await loadParam()
+    var hubG1 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy1.toLowerCase() && item.map == 0)
     hubG1 = hubG1.length > 0 ? hubG1[0].id : -1; //needed to avoid duplicate names
-    var hubG2 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy2.toLowerCase() && item.map == 1);
+    var hubG2 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy2.toLowerCase() && item.map == 1)
     hubG2 = hubG2.length > 0 ? hubG2[0].id : -1; //needed to avoid duplicate names
     var hubG3 = planets.filter((item) => item.name.toLowerCase() == hubGalaxy3.toLowerCase() && item.map == 2)
     hubG3 = hubG3.length > 0 ? hubG3[0].id : -1; //needed to avoid duplicate names
-    var hubs = [hubG1, hubG2, hubG3];
-    var orion = { id: 70, slvl: 14 };
-    var andromeda = { id: 102, slvl: 17 };
-    if (shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy < 0) {
-        console.log("ManageAutoroutes: invalid parameters");
-        return false;
+    var hubs = [hubG1, hubG2, hubG3]
+    var orion = { id: 70, slvl: 14 }
+    var andromeda = { id: 102, slvl: 17 }
+    if (shipsPerAutoroute <= 0 || transferPercent <= 0 || redundancy < 0 || !prefix) {
+        console.log("ManageAutoroutes: invalid parameters")
+        return false
     }
-    var config = { subtree: true, childList: true };
-    var ele = document.getElementById("planet_interface");
-    var cname = "action_auto404";
+    prefix = (new String(prefix)).valueOf()
+    var config = { subtree: true, childList: true }
+    var ele = document.getElementById("planet_interface")
+    var cname = "action_auto404"
     var obs = new MutationObserver(function (_mutation) {
         if (document.getElementById(cname)) return;
         if (!document.getElementById("action_auto")) return;
@@ -113,19 +119,22 @@
         function createAutoroutes(targets) {
             if (currentHub < 0 || hubPending) return false;
             let hub = currentHub;
+            let excludedPlanets = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name.toLowerCase().includes("noscript")).map((item) => item.origin == hub ? item.destination : item.origin);
             targets.forEach((dest) => {
                 if (dest == hub) return;
+                if (excludedPlanets.includes(dest))
+                    return;
                 if (topUp) noDuplicates = true;
-                let f, pos, neededShips, routePresent, currentRoute;
-                neededShips = shipsPerAutoroute;
-                let exclusions = [];
+                let f, pos, neededShips, routePresent, currentRoute, routeName
+                neededShips = shipsPerAutoroute
+                routeName = prefix + planets[dest].name
+                let exclusions = []
                 if (planets[dest].type != "acid" && planets[dest].type != "radioactive") exclusions.push(15);
                 if (planets[dest].type == "lava") exclusions.push(4, 2);
-                let ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.civis == game.id && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
+                let ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name == routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
                     || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)));
                 routePresent = ff.length > 0;
-
-                if (cancelOldroutes && cargo.id == andromeda.id && routePresent) {
+                if (cancelOldRoutes && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
                     if (currentRoute.ships[orion.id] > 0) {
                         let sourcePlanet, orionFleet;
@@ -148,7 +157,7 @@
                         else { // fleet has only orions -> cancel autoroute and update ff (leave fleet in travel to ease manual delivery)
                             currentRoute.type = "normal";
                             currentRoute.name = "Orions canceled from " + planets[dest].name;
-                            ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.civis == game.id && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
+                            ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name == routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
                                 || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)));
                             routePresent = ff.length > 0;
                             if (routePresent)
@@ -183,11 +192,11 @@
                 let enoughResources = enoughHubfleet || !needed.some((item, index) => planets[hub].resources[index] < item * neededShips);
                 if (!enoughResources) {
                     if (!routePresent) { // planet without autoroute, better recover the orions
-                        let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.civis == game.id &&
+                        let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.name.includes("Orions canceled from ") &&
                             (dest == item.origin || dest == item.destination));
                         if (fn.length > 0) {
                             fn[0].type = "auto";
-                            fn[0].name = "Auto_" + planets[dest].name;
+                            fn[0].name = prefix + planets[dest].name;
                         }
                         else
                             console.log("Sorry " + planets[dest].name);
@@ -196,7 +205,7 @@
                     return false;
                 }
                 if (enoughHubfleet) {
-                    f = new Fleet(game.id, "Auto_" + planets[dest].name);
+                    f = new Fleet(game.id, prefix + planets[dest].name);
                     f.ships[cargo.id] += neededShips;
                     planets[hub].fleets.hub.ships[cargo.id] -= neededShips;
                     for (pos = 1; planets[hub].fleets[pos];) pos++; //find the correct orbit slot to place the new fleet
@@ -211,10 +220,10 @@
                     planets[hub].shipyardFleet = new Fleet(game.id, "n");
                     planets[hub].shipyardFleet.pushed = false;
                     planets[hub].buyMultipleShip(cargo.id, neededShips);
-                    planets[hub].shipyardFleet.name = "Auto_" + planets[dest].name;
+                    planets[hub].shipyardFleet.name = prefix + planets[dest].name;
                     planets[hub].fleetPush(planets[hub].shipyardFleet);
                     planets[hub].shipyardFleet.pushed = true;
-                    pos = parseInt(Object.keys(planets[hub].fleets).filter((key) => planets[hub].fleets[key].name == "Auto_" + planets[dest].name)[0]); //if multiple matches (how?), i'll just take the first one
+                    pos = parseInt(Object.keys(planets[hub].fleets).filter((key) => planets[hub].fleets[key].name == prefix + planets[dest].name)[0]); //if multiple matches (how?), i'll just take the first one
                     f = planets[hub].fleets[pos];
                 }
                 if (topUp && currentRoute) {
@@ -244,10 +253,14 @@
                 if (currentRoute.shipNum() > currentRoute.ships[cargo.id])
                     console.log("ManageAutoroutes: mixing ships in autoroutes is not advised (" + planets[dest].name + ")");
                 delete planets[hub].fleets[pos];
+                if (onlyScriptRoutes) {
+                    let other = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && !item.name.includes(prefix) && (item.destination == dest || item.origin == dest))
+                    other.forEach((item) => item.type = "normal")
+                }
             });
         }
     });
-    obs.observe(ele, config);
+    obs.observe(ele, config)
 
     function saveParam() {
         let savestring = {
@@ -261,7 +274,9 @@
             takeFromHubfleet: takeFromHubfleet,
             topUp: topUp,
             redundancy: redundancy,
-            cancelOldroutes: cancelOldroutes
+            cancelOldRoutes: cancelOldRoutes,
+            prefix: prefix,
+            onlyScriptRoutes: onlyScriptRoutes
         };
         GM.setValue("s404", JSON.stringify(savestring));
     }
@@ -279,7 +294,9 @@
             takeFromHubfleet = loadstring["takeFromHubfleet"];
             topUp = loadstring["topUp"];
             redundancy = loadstring["redundancy"];
-            cancelOldroutes = loadstring["cancelOldroutes"];
+            cancelOldRoutes = loadstring["cancelOldRoutes"];
+            prefix = loadstring["prefix"]
+            onlyScriptRoutes = loadstring["onlyScriptRoutes"]
         } catch (e) { return; } //revert to given params if errors
     }
 })();

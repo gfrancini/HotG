@@ -15,40 +15,45 @@
 
 (async function () {
     'use strict';
+	
+	
+	// PLEASE READ THE FOLLOWING INFORMATION
+	
+    // What does this script do?
 
-    // what does this script do?
+    // it adds a button on the planet interface (also called planet overview) with the text "create autoroute to hub" or "create all autoroutes" (when on hub planet)
+    // when clicked, this button creates an autoroute between that planet and the (player-chosen) hub for that galaxy or,
+    // if the selected planet is the hub, it creates an autoroute to every player-owned planet in that galaxy.
+    // If you change parameters you need to set "ignoreStoredValues" to true, save the script, and reload the game page for the changes to take effect.
+    // If scripts scare you then the default values SHOULD work for most people.  But, parameters need to be set correctly before using the script.
+    // works only with Orion and Andromeda cargo ships. (if you are using any earlier cargo, you probably have few planets and little resources)
 
-    // it adds a button on the planet interface (also called planet overview) with text "create autoroute to hub" or "create all autoroutes" (when on hub planet)
-    // when clicked, this button creates an autoroute between that planet and the (player-chosen) hub for that galaxy - if that planet is not the hub.
-    // if the planet is the hub, it creates an autoroute to every player-owned planet in that galaxy.
-    // if you change parameters you need to save and reload the game page for the changes to take effect.
-    // parameters need to be set correctly before using the script.
-    // works only with orion and andromeda cargo. (if you are using any earlier cargo, you probably have few planets and little resources)
+    // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause a catastrophe, better safe than sorry.
 
-    // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause any catastrophe, better safe than sorry.
-
-    // BEWARE: it is not 100% gamelike.
-    // Unlike the autoroutes you create ingame, here you will set transfer also for (yet) undiscovered resources, as should happen with the "extend to new resources" option enabled ingame.
+    // BEWARE: it is not 100% game-like.
+    // Unlike the autoroutes you create ingame, here you will set transfer also for (yet) undiscovered resources, as should (but does not) happen with the "extend to new resources" option enabled ingame.
 
     //////////
 
-    var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
 
-
-    //if you dont own one of the hubs, the button will be disabled in that galaxy, but will become active again after you conquer that hub.
+    //if you dont own the hub yet, the button will be disabled in that galaxy, but will become active when you colonize that hub.
     var hubGalaxy1 = "ishtar gate";
     var hubGalaxy2 = "solidad";
     var hubGalaxy3 = "xirandrus";
     var shipsPerAutoroute = 1;
-    var transferPercent = 101;
-    var useLategameExclusions = false; //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
-    var noDuplicates = true; // true => do not create autoroute if target planet already has one
-    var takeFromHubfleet = true; //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
-    var topUp = true; // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
-    var redundancy = 10; //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
-    var cancelOldroutes = true; //true => if using andromeda and the current route contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+    var transferPercent = 101;  // The tansfer rate to check on non-hub side of the auto-route -- in-game defaule is 105
+    var useLategameExclusions = false; // false => transfer all resources *** true => exclude plastic except for radioactive/acid planets and exclude graphite/titanium on lava planets
+    var noDuplicates = true; // true => do not create autoroute if target planet already has one *** false => create a new autoroute every time -- NOT RECOMMENDED
+    var takeFromHubFleet = true; //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
+    var topUp = true; // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true). false => script will not interact with routes that already exist.
+    var redundancy = 10; //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).  MUST BE 0 OR POSITIVE
+    var cancelOldRoutes = true; //true => if using andromeda and the current route contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+
+	// When the script (auto)updates this will be set to false various acitons can cause stored values to be deleted, so it is recommended that you restore the above values to your liking and set this back to true
+    var ignoreStoredValues = false; //true => save the above options on next reload of game page. false => load the last saved options. 
 
     //////////
+
 
 
     if (ignoreStoredValues)
@@ -125,7 +130,7 @@
                     || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)));
                 routePresent = ff.length > 0;
 
-                if (cancelOldroutes && cargo.id == andromeda.id && routePresent) {
+                if (cancelOldRoutes && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
                     if (currentRoute.ships[orion.id] > 0) {
                         let sourcePlanet, orionFleet;
@@ -179,7 +184,7 @@
                         neededShips = Math.max(Math.ceil(Math.max(neededCargoIn, neededCargoOut) * (transferPercent / 100) * 2 * distance / currentSpeed / ships[cargo.id].maxStorage * (1 + redundancy / 100)), currentRoute.ships[cargo.id]) - currentRoute.ships[cargo.id];
                     }
                 }
-                let enoughHubfleet = takeFromHubfleet && planets[hub].fleets.hub.ships[cargo.id] > neededShips;
+                let enoughHubfleet = takeFromHubFleet && planets[hub].fleets.hub.ships[cargo.id] > neededShips;
                 let enoughResources = enoughHubfleet || !needed.some((item, index) => planets[hub].resources[index] < item * neededShips);
                 if (!enoughResources) {
                     if (!routePresent) { // planet without autoroute, better recover the orions
@@ -258,10 +263,10 @@
             transferPercent: transferPercent,
             useLategameExclusions: useLategameExclusions,
             noDuplicates: noDuplicates,
-            takeFromHubfleet: takeFromHubfleet,
+            takeFromHubFleet: takeFromHubFleet,
             topUp: topUp,
             redundancy: redundancy,
-            cancelOldroutes: cancelOldroutes
+            cancelOldRoutes: cancelOldRoutes
         };
         GM.setValue("s404", JSON.stringify(savestring));
     }
@@ -276,10 +281,10 @@
             transferPercent = loadstring["transferPercent"];
             useLategameExclusions = loadstring["useLategameExclusions"];
             noDuplicates = loadstring["noDuplicates"];
-            takeFromHubfleet = loadstring["takeFromHubfleet"];
+            takeFromHubFleet = loadstring["takeFromHubFleet"];
             topUp = loadstring["topUp"];
             redundancy = loadstring["redundancy"];
-            cancelOldroutes = loadstring["cancelOldroutes"];
+            cancelOldRoutes = loadstring["cancelOldRoutes"];
         } catch (e) { return; } //revert to given params if errors
     }
 })();

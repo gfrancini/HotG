@@ -10,3 +10,5 @@ Remember to **backup your save** before using them.
 * [**MasterImport**](https://github.com/gfrancini/HotG/raw/master/scripts/MasterImport.user.js) - One-button "import blueprint to all planets"
 * [**RerollTournament**](https://github.com/gfrancini/HotG/raw/master/scripts/RerollTournament.user.js) - Reroll the tournament opponent without reloading page
 * [**BlueprintPrototyping**](https://github.com/gfrancini/HotG/raw/master/scripts/BlueprintPrototyping.user.js) - Blueprint planet-types by cloning a prototype planet
+
+* [**ManageAutoroutes-BETA**](https://github.com/gfrancini/HotG/raw/betas/scripts/ManageAutoroutes.user.js) - beta version, test new parameters please :heart:

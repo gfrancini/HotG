@@ -39,19 +39,19 @@
 
 
     //if you dont own one of the hubs, the button will be disabled in that galaxy, but will become active again after you conquer that hub.
-    var hubGalaxy1 = "promision"
-    var hubGalaxy2 = "persephone"
+    var hubGalaxy1 = "ishtar gate"
+    var hubGalaxy2 = "solidad"
     var hubGalaxy3 = "xirandrus"
     var prefix = "Auto_" //script-generated fleet will be named "prefix + destination-planet-name". cannot be left empty ("") and must always be surrounded by "".
     var shipsPerAutoroute = 1
     var transferPercent = 101
-    var useLategameExclusions = true //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
+    var useLategameExclusions = false //true => no shipping of plastic except for radioactive/acid and no shipping of graphite/titanium for lava *** false => transfer all resources
     var noDuplicates = true // true => do not create autoroute if target planet already has one
     var takeFromHubfleet = true //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
     var topUp = true // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
     var redundancy = 10 //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
-    var cancelOldRoutes = true //true => if switching to andromeda and the script-routes contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
-    var onlyScriptRoutes = true //true => eventually cancel all autoroutes not managed by the script (except when their name includes "noscript")
+    var cancelOldRoutes = false //true => if switching to andromeda and the script-routes contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+    var onlyScriptRoutes = false //true => eventually cancel all autoroutes not managed by the script (except when their name includes "noscript")
 
     //////////
 
@@ -89,8 +89,7 @@
         var needed = planets[0].resources.slice();
         ships[cargo.id].cost.forEach((item, index) => { needed[index] = item });
         var hubSelected = currentPlanet.id == currentHub;
-        let targets = Array.of(currentPlanet.id);
-        if (hubSelected) targets = galaxy;
+        let targets = hubSelected ? galaxy: Array.of(currentPlanet.id);
         var auto_btn = document.getElementById("action_auto");
         var auto404_btn = document.createElement("li");
         auto404_btn.className = "button";
@@ -122,8 +121,7 @@
             let excludedPlanets = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name.toLowerCase().includes("noscript")).map((item) => item.origin == hub ? item.destination : item.origin);
             targets.forEach((dest) => {
                 if (dest == hub) return;
-                if (excludedPlanets.includes(dest))
-                    return;
+                if (excludedPlanets.includes(dest)) return;
                 if (topUp) noDuplicates = true;
                 let f, pos, neededShips, routePresent, currentRoute, routeName
                 neededShips = shipsPerAutoroute
@@ -191,11 +189,11 @@
                 let enoughHubfleet = takeFromHubfleet && planets[hub].fleets.hub.ships[cargo.id] > neededShips;
                 let enoughResources = enoughHubfleet || !needed.some((item, index) => planets[hub].resources[index] < item * neededShips);
                 if (!enoughResources) {
-                    if (!routePresent) { // planet without autoroute, better recover the orions
+                    if (!routePresent) { // planet without autoroute, try to recover the orions
                         let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.name.includes("Orions canceled from ") &&
                             (dest == item.origin || dest == item.destination));
                         if (fn.length > 0) {
-                            fn[0].type = "auto";
+                            fn[0].type = "auto"; //only grab the first travelling fleet
                             fn[0].name = prefix + planets[dest].name;
                         }
                         else

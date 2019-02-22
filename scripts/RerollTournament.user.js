@@ -10,13 +10,13 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
     var cname = "reroll_btn";
-    var obs = new MutationObserver(function(mutation){
-        if(document.getElementById(cname)) return;
+    var obs = new MutationObserver(function (mutation) {
+        if (document.getElementById(cname)) return;
         var b_btn = document.getElementById("fight_button");
-        if(!b_btn) return;
+        if (!b_btn) return;
         var r_btn = document.createElement("li");
         r_btn.id = cname;
         r_btn.className = "button";
@@ -31,7 +31,7 @@
         b_btn.parentNode.appendChild(r_btn);
     });
 
-    function reroll(){
+    function reroll() {
         qurisTournament.fleet = null;
         generateQurisTournamentFleet();
         $("#b_tournament_icon").click();

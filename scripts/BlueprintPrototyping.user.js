@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BlueprintPrototyping
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.7
+// @version      0.8
 // @description  Assist with blueprinting in HoTG.
 // @author       stronzio, betatesting/suggestions by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
@@ -11,7 +11,7 @@
 // @grant        GM.getValue
 // ==/UserScript==
 
-(async function() {
+(async function () {
     'use strict';
 
     // what does this script do?
@@ -36,7 +36,7 @@
 
     // ALWAYS BACKUP YOUR SAVE: this script interacts with game code. While it shouldnt cause any catastrophe, better safe than sorry.
 
-//////////
+    //////////
 
     var ignoreStoredValues = false; //true => save current parameters and load them when this is set to false. When the script (auto)updates this will be set to false (to avoid messing with your game): you should restore parameters to your liking and set this to true.
 
@@ -48,14 +48,14 @@
     var protoempire = true; //true => enable *export to empire* mode
     var protogalaxy = false; //true => enable *export to galaxy* mode
 
-//////////
+    //////////
 
-    var config = { subtree: true, childList: true};
+    var config = { subtree: true, childList: true };
     var ele = document.getElementById("planet_interface");
     var cname = "action_proto404";
     var cname2 = "mode_proto404";
     var modes = {};
-    if(ignoreStoredValues)
+    if (ignoreStoredValues)
         saveParam();
     else
         await loadParam();
@@ -69,23 +69,23 @@
     modesNames.empire = "Export to Empire:";
     modesNames.galaxy = "Export to Galaxy:";
     var activeModes = [];
-    for(let key in modes){
-        if(modes[key]) activeModes.push(key);
+    for (let key in modes) {
+        if (modes[key]) activeModes.push(key);
     }
-    if( activeModes.length == 0) {
+    if (activeModes.length == 0) {
         console.log("BlueprintPrototyping: all modes inactive");
         return;
     }
     var prototypes = {};
     protonames.forEach((s) => {
         let p = game.planets.filter((item) => planets[item].name.toLowerCase() == s.toLowerCase());
-        if( p.length != 1) console.log("error in prototypes (can probably ignore)"); //need a better idea for those checks
+        if (p.length != 1) console.log("error in prototypes (can probably ignore)"); //need a better idea for those checks
         else prototypes[planets[p[0]].type] = p[0]; //store planet id for ease.
     });
     let currentMode = activeModes[0];
-    var obs = new MutationObserver(function(mutation) {
-        if(document.getElementById(cname)) return;
-        if(!document.getElementById("action_b")) return;
+    var obs = new MutationObserver(function (mutation) {
+        if (document.getElementById(cname)) return;
+        if (!document.getElementById("action_b")) return;
         var b_btn = document.getElementById("action_b");
         var bpp_btn = document.createElement("li");
         var bpp_mode_btn = document.createElement("li");
@@ -102,23 +102,23 @@
         bpp_btn.appendChild(b1);
         bpp_mode_btn.appendChild(b2);
         updateButtonText();
-        b_btn.parentNode.insertBefore(bpp_mode_btn,b_btn);
-        b_btn.parentNode.insertBefore(bpp_btn,b_btn);
-        if( sortPlanets) putPrototypesOnTop();
+        b_btn.parentNode.insertBefore(bpp_mode_btn, b_btn);
+        b_btn.parentNode.insertBefore(bpp_btn, b_btn);
+        if (sortPlanets) putPrototypesOnTop();
         return;
 
-        function toggleMode(){
-            let next = activeModes.indexOf(currentMode) +1;
-            if(next >= activeModes.length) next = 0;
+        function toggleMode() {
+            let next = activeModes.indexOf(currentMode) + 1;
+            if (next >= activeModes.length) next = 0;
             currentMode = activeModes[next];
             updateButtonText();
         }
 
-        function updateButtonText(){
-            let str1 = "Toggle mode -> "+modesNames[currentMode];
+        function updateButtonText() {
+            let str1 = "Toggle mode -> " + modesNames[currentMode];
             let type = planets[currentPlanet.id].type;
-            let str2 = "["+type+"] ";
-            switch(currentMode) {
+            let str2 = "[" + type + "] ";
+            switch (currentMode) {
                 case "set":
                     str2 += currentPlanet.name;
                     break;
@@ -128,11 +128,11 @@
                     break;
                 case "galaxy":
                     str2 += planets[prototypes[type]].name;
-                    str1 += " "+(planets[currentPlanet.id].map+1);
+                    str1 += " " + (planets[currentPlanet.id].map + 1);
                     break;
             }
             let autob = document.getElementById("action_auto404"); //to identify hub i check the autoroutes' script button
-            if(autob && autob.firstChild.textContent.includes("all") && currentMode != "import") {
+            if (autob && autob.firstChild.textContent.includes("all") && currentMode != "import") {
                 //str1 = "Hub detected";
                 str2 = "Disabled for safety";
             }
@@ -140,74 +140,74 @@
             bpp_btn.firstChild.textContent = str2;
         }
 
-        function putPrototypesOnTop(){
+        function putPrototypesOnTop() {
             let others = game.planets.filter((x) => !Object.values(prototypes).includes(x));
             let planet_list = game.planets.filter((x) => Object.values(prototypes).includes(x)).sort(byInfluence)
-            .concat(
-                others.filter((x) => planets[x].map == 0).sort(byInfluence),
-                others.filter((x) => planets[x].map == 1).sort(byInfluence),
-                others.filter((x) => planets[x].map == 2).sort(byInfluence)
-            );
+                .concat(
+                    others.filter((x) => planets[x].map == 0).sort(byInfluence),
+                    others.filter((x) => planets[x].map == 1).sort(byInfluence),
+                    others.filter((x) => planets[x].map == 2).sort(byInfluence)
+                );
             game.planets = planet_list;
             return;
         }
 
-        function byInfluence(a,b){ //comparator for planets id
+        function byInfluence(a, b) { //comparator for planets id
             let r = planets[a].influence - planets[b].influence;
-            if(r==0) return planets[a].id - planets[b].id;
+            if (r == 0) return planets[a].id - planets[b].id;
             return r;
         }
 
-        function findPrototypeBP(){
+        function findPrototypeBP() {
             let type = planets[currentPlanet.id].type;
             let blueprint = "";
             let db = new Array(planets[prototypes[type]].structure.length);
             Object.values(planets[prototypes[type]].structure).forEach((b) => db[b.building] = b.number);
             Object.values(planets[prototypes[type]]["queue"]).filter((q) => q && q.n > 0).forEach((q) => db[q.b] += q.n);//add queued buildings
-            db.forEach(function(item,index) {if(item>0) blueprint += " " + buildings[index].displayName.replace(/\s/g, "_") + " " + item});
+            db.forEach(function (item, index) { if (item > 0) blueprint += " " + buildings[index].displayName.replace(/\s/g, "_") + " " + item });
             //return planets[prototypes[type]].exportBlueprint(); //original function doesnt export queued items (0.42A).
             return blueprint;
         }
 
-        function executeMode(){
-            if(bpp_btn.firstChild.textContent.includes("disabled")){
+        function executeMode() {
+            if (bpp_btn.firstChild.textContent.includes("disabled")) {
                 console.log("BlueprintPrototyping: function disabled");
                 return;
             }
             let blueprint = findPrototypeBP();
             let targetlist = game.planets.filter((p) => planets[p].type == planets[currentPlanet.id].type);
-            switch(currentMode) {
+            switch (currentMode) {
                 case "set":
                     prototypes[planets[currentPlanet.id].type] = currentPlanet.id;
-                    if( sortPlanets) putPrototypesOnTop();
+                    if (sortPlanets) putPrototypesOnTop();
                     return;
                 case "import":
                     planets[currentPlanet.id].importBlueprint(blueprint);
-                    if(copyUIsetting)
+                    if (copyUIsetting)
                         applyUIsetting(currentPlanet.id);
                     return;
                 case "empire":
                     targetlist.forEach((p) => planets[p].importBlueprint(blueprint));
-                    if(copyUIsetting)
+                    if (copyUIsetting)
                         targetlist.forEach((p) => applyUIsetting(p));
                     return;
                 case "galaxy":
                     targetlist.filter((p) => planets[p].map == planets[currentPlanet.id].map).forEach((p) => planets[p].importBlueprint(blueprint));
-                    if(copyUIsetting)
+                    if (copyUIsetting)
                         targetlist.filter((p) => planets[p].map == planets[currentPlanet.id].map).forEach((p) => applyUIsetting(p));
                     return;
             }
         }
 
-        function applyUIsetting(target){
+        function applyUIsetting(target) {
             let original = prototypes[planets[target].type];
-            Object.values(planets[original].structure).forEach((b) => { planets[target].structure[b.building].showUI = b.showUI}); //b.building should also be the index in planets[p].structure
+            Object.values(planets[original].structure).forEach((b) => { planets[target].structure[b.building].showUI = b.showUI }); //b.building should also be the index in planets[p].structure
         }
 
     });
-    obs.observe(ele,config);
+    obs.observe(ele, config);
 
-    function saveParam(){
+    function saveParam() {
         let savestring = {
             copyUIsetting: copyUIsetting,
             sortPlanets: sortPlanets,
@@ -217,12 +217,12 @@
             protoempire: protoempire,
             protogalaxy: protogalaxy
         };
-        GM.setValue("s404",JSON.stringify(savestring));
+        GM.setValue("s404", JSON.stringify(savestring));
     }
 
-    async function loadParam(){
-        let loadstring = JSON.parse(await GM.getValue("s404"));
+    async function loadParam() {
         try {
+            let loadstring = JSON.parse(await GM.getValue("s404"));
             copyUIsetting = loadstring["copyUIsetting"];
             sortPlanets = loadstring["sortPlanets"];
             protonames = loadstring["protonames"];
@@ -230,7 +230,7 @@
             protoimport = loadstring["protoimport"];
             protoempire = loadstring["protoempire"];
             protogalaxy = loadstring["protogalaxy"];
-        } catch(e){return;} //revert to given params if errors
+        } catch (e) { return; } //revert to given params if errors
     }
 
 })();

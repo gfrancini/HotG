@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MasterImport
 // @namespace    https://github.com/gfrancini/HotG
-// @version      0.3
+// @version      0.4
 // @description  Adds a button to import blueprint everywhere in HotG
 // @author       stronzio, betatesting by dekember
 // @match        https://game288398.konggames.com/gamez/0028/8398/live/*
@@ -50,8 +50,12 @@
             if (!blueprint) return;
             var planetList = game.planets;
             if (excludedTypes) planetList = planetList.filter((p) => !excludedTypes.includes(planets[p].type));
-            planetList.forEach((p) => planets[p].importBlueprint(blueprint));
-            document.getElementById("blueprintinfo").innerHTML = "<span class=\"green_text\"> Master Import Done! </span>";
+            let import_results = [];
+            planetList.forEach((p) => import_results.push( planets[p].importBlueprint(blueprint).result));
+            if( import_results.some(x => x))
+                document.getElementById("blueprintinfo").innerHTML = "<span class=\"green_text\"> Master Import Executed! </span>";
+            else
+                document.getElementById("blueprintinfo").innerHTML = "<span class=\"red_text\"> Nothing added - check your blueprint! </span>";
             this.firstChild.textContent = "Master Import";
             return;
         }

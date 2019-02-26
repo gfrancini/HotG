@@ -35,7 +35,7 @@
     //////////
 
     var ignoreStoredValues = false; //true => use current parameters and save them *** false => ignore current parameters and load them from memory. (if errors use current ones)
-                        //when the script updates this will be set to false (to avoid messing with your game): you should then restore correct parameters and set this to true.
+    //when the script updates this will be set to false (to avoid messing with your game): you should then restore correct parameters and set this to true.
 
 
     //if you dont own one of the hubs, the button will be disabled in that galaxy, but will become active again after you conquer that hub.
@@ -89,7 +89,7 @@
         var needed = planets[0].resources.slice();
         ships[cargo.id].cost.forEach((item, index) => { needed[index] = item });
         var hubSelected = currentPlanet.id == currentHub;
-        let targets = hubSelected ? galaxy: Array.of(currentPlanet.id);
+        let targets = hubSelected ? galaxy : Array.of(currentPlanet.id);
         var auto_btn = document.getElementById("action_auto");
         var auto404_btn = document.createElement("li");
         auto404_btn.className = "button";
@@ -135,26 +135,29 @@
                 if (cancelOldRoutes && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
                     if (currentRoute.ships[orion.id] > 0) {
+                        console.log("orions detected");
                         let sourcePlanet, orionFleet;
                         sourcePlanet = planets[currentRoute.source];
-                        if (currentRoute.shipNum() > currentRoute.ships[orion.id]) { //split out orions and let route go on
-                            orionFleet = new Fleet(game.id, "Orions split from " + planets[dest].name);
-                            orionFleet.ships[orion.id] += currentRoute.ships[orion.id];
+                        if (currentRoute.ships[andromeda.id] > 0) { //split out anything that's not andromeda cargo and let route go on
+                            console.log("not just orions -> split");
+                            orionFleet = new Fleet(game.id, "Route split from " + planets[dest].name);
+                            currentRoute.ships.filter((x,id) => id != andromeda.id).forEach((x,id) => orionFleet.ships[id] = x);
                             let loadFactor = orionFleet.maxStorage() / currentRoute.maxStorage();
-                            currentRoute.ships[orion.id] = 0;
                             currentRoute.storage.forEach((item, index) => { //distribute present cargo like ingame functions
                                 if (index >= 0 && item > 0) {
                                     orionFleet.storage[index] = item * loadFactor;
                                     item *= (1 - loadFactor);
                                 }
                             });
+                            currentRoute.ships.filter((x,id) => id != andromeda.id).forEach((x,id) => currentRoute.ships[id] = 0);
                             for (pos = 1; sourcePlanet.fleets[pos];) pos++; //find the correct orbit slot to place the new fleet
                             sourcePlanet.fleets[pos] = orionFleet;
                             orionFleet.pushed = true;
                         }
-                        else { // fleet has only orions -> cancel autoroute and update ff (leave fleet in travel to ease manual delivery)
+                        else { // fleet has no andromeda -> cancel autoroute and update ff (leave fleet in travel to ease manual delivery)
+                            console.log(" only orions -> cancel");
                             currentRoute.type = "normal";
-                            currentRoute.name = "Orions canceled from " + planets[dest].name;
+                            currentRoute.name = "Route canceled from " + planets[dest].name;
                             ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name == routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
                                 || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)));
                             routePresent = ff.length > 0;
@@ -187,13 +190,15 @@
                     }
                 }
                 let enoughHubfleet = takeFromHubfleet && planets[hub].fleets.hub.ships[cargo.id] > neededShips;
-                let enoughResources = enoughHubfleet || !needed.some((item, index) => planets[hub].resources[index] < item * neededShips);
+                let enoughResources = enoughHubfleet || (!needed.some((item, index) => planets[hub].resources[index] < item * neededShips) && planets[hub].structure[buildingsName.shipyard].number >= cargo.slvl);
                 if (!enoughResources) {
                     if (!routePresent) { // planet without autoroute, try to recover the orions
-                        let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.name.includes("Orions canceled from ") &&
+                        console.log(" not route check travelling fleet");
+                        let fn = fleetSchedule.fleets.filter((item) => item && item.type == "normal" && item.name.includes("Route canceled from ") &&
                             (dest == item.origin || dest == item.destination));
                         if (fn.length > 0) {
-                            fn[0].type = "auto"; //only grab the first travelling fleet
+                            console.log("found fleet");
+                            fn[0].type = "auto";
                             fn[0].name = prefix + planets[dest].name;
                         }
                         else
@@ -253,7 +258,10 @@
                 delete planets[hub].fleets[pos];
                 if (onlyScriptRoutes) {
                     let other = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && !item.name.includes(prefix) && (item.destination == dest || item.origin == dest))
-                    other.forEach((item) => item.type = "normal")
+                    if (other.length > 0) {
+                        other.forEach((item) => item.type = "normal")
+                        console.log("other canceled: " + planets[dest].name);
+                    }
                 }
             });
         }

@@ -134,14 +134,14 @@
                 routePresent = ff.length > 0;
                 if (cancelOldRoutes && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
-                    if (currentRoute.ships[orion.id] > 0) {
+                    if (currentRoute.shipNum() > currentRoute.ships[andromeda.id]) {
                         console.log("orions detected");
                         let sourcePlanet, orionFleet;
                         sourcePlanet = planets[currentRoute.source];
-                        if (currentRoute.ships[andromeda.id] > 0) { //split out anything that's not andromeda cargo and let route go on
+                        if (currentRoute.ships[andromeda.id] > 0) { //split out anything that's not andromeda and let route go on
                             console.log("not just orions -> split");
                             orionFleet = new Fleet(game.id, "Route split from " + planets[dest].name);
-                            currentRoute.ships.filter((x,id) => id != andromeda.id).forEach((x,id) => orionFleet.ships[id] = x);
+                            currentRoute.ships.filter((x, id) => id != andromeda.id).forEach((x, id) => orionFleet.ships[id] = x);
                             let loadFactor = orionFleet.maxStorage() / currentRoute.maxStorage();
                             currentRoute.storage.forEach((item, index) => { //distribute present cargo like ingame functions
                                 if (index >= 0 && item > 0) {
@@ -149,7 +149,7 @@
                                     item *= (1 - loadFactor);
                                 }
                             });
-                            currentRoute.ships.filter((x,id) => id != andromeda.id).forEach((x,id) => currentRoute.ships[id] = 0);
+                            currentRoute.ships.filter((x, id) => id != andromeda.id).forEach((x, id) => currentRoute.ships[id] = 0);
                             for (pos = 1; sourcePlanet.fleets[pos];) pos++; //find the correct orbit slot to place the new fleet
                             sourcePlanet.fleets[pos] = orionFleet;
                             orionFleet.pushed = true;
@@ -257,7 +257,8 @@
                     console.log("ManageAutoroutes: mixing ships in autoroutes is not advised (" + planets[dest].name + ")");
                 delete planets[hub].fleets[pos];
                 if (onlyScriptRoutes) {
-                    let other = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && !item.name.includes(prefix) && (item.destination == dest || item.origin == dest))
+                    let other = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name != routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
+                        || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)))
                     if (other.length > 0) {
                         other.forEach((item) => item.type = "normal")
                         console.log("other canceled: " + planets[dest].name);

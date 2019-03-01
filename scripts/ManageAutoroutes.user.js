@@ -50,8 +50,8 @@
     var takeFromHubfleet = true //true => try to split ships from hubfleet (buy ships only if there aren't enough) **** false => always buy ships
     var topUp = true // true => if there is already an autoroute, will try to build enough ships to stop any present overloading (will also set noDuplicates to true).
     var redundancy = 10 //percent of extra ships to build, useful to "make space" for future increases in production. Set to zero to disable. (won't affect the "shipsPerAutoroute" value).
-    var cancelOldRoutes = false //true => if switching to andromeda and the script-routes contains orions, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
-    var onlyScriptRoutes = false //true => eventually cancel all autoroutes not managed by the script (except when their name includes "noscript")
+    var cancelOldRoutesHub = false //true => if switching to andromeda and the script-routes (involving hub) contains other ships, split them out + cancel travel *** false => normal behaviour (but issue a warning in the console)
+    var onlyScriptRoutesHub = false //true => eventually cancel all autoroutes (involving hub) not managed by the script (except when their name includes "noscript")
 
     //////////
 
@@ -132,7 +132,7 @@
                 let ff = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name == routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
                     || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)));
                 routePresent = ff.length > 0;
-                if (cancelOldRoutes && cargo.id == andromeda.id && routePresent) {
+                if (cancelOldRoutesHub && cargo.id == andromeda.id && routePresent) {
                     currentRoute = ff[0];
                     if (currentRoute.shipNum() > currentRoute.ships[andromeda.id]) {
                         console.log("orions detected");
@@ -256,7 +256,7 @@
                 if (currentRoute.shipNum() > currentRoute.ships[cargo.id])
                     console.log("ManageAutoroutes: mixing ships in autoroutes is not advised (" + planets[dest].name + ")");
                 delete planets[hub].fleets[pos];
-                if (onlyScriptRoutes) {
+                if (onlyScriptRoutesHub) {
                     let other = fleetSchedule.fleets.filter((item) => item && item.type == "auto" && item.name != routeName && ((item.autoMap[dest] == 1 && item.autoMap[hub] == 0)
                         || (item.autoMap[dest] == 0 && item.autoMap[hub] == 1)))
                     if (other.length > 0) {
@@ -281,9 +281,9 @@
             takeFromHubfleet: takeFromHubfleet,
             topUp: topUp,
             redundancy: redundancy,
-            cancelOldRoutes: cancelOldRoutes,
+            cancelOldRoutes: cancelOldRoutesHub,
             prefix: prefix,
-            onlyScriptRoutes: onlyScriptRoutes
+            onlyScriptRoutes: onlyScriptRoutesHub
         };
         GM.setValue("s404", JSON.stringify(savestring));
     }
@@ -301,9 +301,9 @@
             takeFromHubfleet = loadstring["takeFromHubfleet"];
             topUp = loadstring["topUp"];
             redundancy = loadstring["redundancy"];
-            cancelOldRoutes = loadstring["cancelOldRoutes"];
+            cancelOldRoutesHub = loadstring["cancelOldRoutes"];
             prefix = loadstring["prefix"]
-            onlyScriptRoutes = loadstring["onlyScriptRoutes"]
+            onlyScriptRoutesHub = loadstring["onlyScriptRoutes"]
         } catch (e) { return; } //revert to given params if errors
     }
 })();
